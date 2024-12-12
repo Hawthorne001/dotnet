@@ -709,12 +709,8 @@ public partial class Test_ObservablePropertyAttribute
         NullabilityInfo rightInfo2 = rightInnerInfo.GenericTypeArguments[2];
 
         Assert.AreEqual(typeof(object), rightInfo2.Type);
-        //Assert.AreEqual(NullabilityState.NotNull, rightInfo2.ReadState);
-        //Assert.AreEqual(NullabilityState.NotNull, rightInfo2.WriteState);
-
-        // The commented out lines are to work around a bug in the NullabilityInfo API in .NET 6.
-        // This has been fixed for .NET 7: https://github.com/dotnet/runtime/pull/63556. The test
-        // cases above can be uncommented when the .NET 7 target (or a more recent version) is added.
+        Assert.AreEqual(NullabilityState.NotNull, rightInfo2.ReadState);
+        Assert.AreEqual(NullabilityState.NotNull, rightInfo2.WriteState);
     }
 #endif
 
@@ -1046,8 +1042,8 @@ public partial class Test_ObservablePropertyAttribute
     {
         ModelWithDependentPropertyAndPropertyChanging model = new();
 
-        List<string> changingArgs = new();
-        List<string> changedArgs = new();
+        List<string?> changingArgs = new();
+        List<string?> changedArgs = new();
 
         model.PropertyChanging += (s, e) => changingArgs.Add(e.PropertyName);
         model.PropertyChanged += (s, e) => changedArgs.Add(e.PropertyName);
@@ -1064,7 +1060,7 @@ public partial class Test_ObservablePropertyAttribute
     {
         ModelWithDependentPropertyAndNoPropertyChanging model = new();
 
-        List<string> changedArgs = new();
+        List<string?> changedArgs = new();
 
         model.PropertyChanged += (s, e) => changedArgs.Add(e.PropertyName);
 
@@ -1797,4 +1793,30 @@ public partial class Test_ObservablePropertyAttribute
 
         public string? FullName => "";
     }
+
+#if NET6_0_OR_GREATER
+    // See https://github.com/CommunityToolkit/dotnet/issues/939
+    public partial class ModelWithSecondaryPropertySetFromGeneratedSetter_DoesNotWarn : ObservableObject
+    {
+        [ObservableProperty]
+        [set: MemberNotNull(nameof(B))]
+        private string a;
+
+        // This type validates forwarding attributes on generated accessors. In particular, there should
+        // be no nullability warning on this constructor (CS8618), thanks to 'MemberNotNullAttribute("B")'
+        // being forwarded to the generated setter in the generated property (see linked issue).
+        public ModelWithSecondaryPropertySetFromGeneratedSetter_DoesNotWarn()
+        {
+            A = "";
+        }
+
+        public string B { get; private set; }
+
+        [MemberNotNull(nameof(B))]
+        partial void OnAChanged(string? oldValue, string newValue)
+        {
+            B = "";
+        }
+    }
+#endif
 }

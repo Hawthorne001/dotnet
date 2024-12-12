@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace CommunityToolkit.Mvvm.SourceGenerators.UnitTests;
 
 [TestClass]
-public class Test_SourceGeneratorsDiagnostics
+public partial class Test_SourceGeneratorsDiagnostics
 {
     [TestMethod]
     public void DuplicateINotifyPropertyChangedInterfaceForINotifyPropertyChangedAttributeError_Explicit()
@@ -664,7 +664,7 @@ public class Test_SourceGeneratorsDiagnostics
     }
 
     [TestMethod]
-    public void NameCollisionForGeneratedObservableProperty()
+    public async Task NameCollisionForGeneratedObservableProperty_PascalCaseField_Warns()
     {
         string source = """
             using CommunityToolkit.Mvvm.ComponentModel;
@@ -674,12 +674,51 @@ public class Test_SourceGeneratorsDiagnostics
                 public partial class SampleViewModel : ObservableObject
                 {
                     [ObservableProperty]
-                    private string Name;
+                    private string {|MVVMTK0014:Name|};
                 }
             }
             """;
 
-        VerifyGeneratedDiagnostics<ObservablePropertyGenerator>(source, "MVVMTK0014");
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<PropertyNameCollisionObservablePropertyAttributeAnalyzer>(source, LanguageVersion.CSharp8);
+    }
+
+    [TestMethod]
+    public async Task NameCollisionForGeneratedObservableProperty_CamelCaseField_DoesNotWarn()
+    {
+        string source = """
+            using CommunityToolkit.Mvvm.ComponentModel;
+
+            namespace MyApp
+            {
+                public partial class SampleViewModel : ObservableObject
+                {
+                    [ObservableProperty]
+                    private string name;
+                }
+            }
+            """;
+
+        // Using C# 9 here because the generated code will emit [MemberNotNull] on the property setter, which requires C# 9
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<PropertyNameCollisionObservablePropertyAttributeAnalyzer>(source, LanguageVersion.CSharp9);
+    }
+
+    [TestMethod]
+    public async Task NameCollisionForGeneratedObservableProperty_PascalCaseProperty_DoesNotWarn()
+    {
+        string source = """
+            using CommunityToolkit.Mvvm.ComponentModel;
+
+            namespace MyApp
+            {
+                public partial class SampleViewModel : ObservableObject
+                {
+                    [ObservableProperty]
+                    private string Name { get; set; }
+                }
+            }
+            """;
+
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<PropertyNameCollisionObservablePropertyAttributeAnalyzer>(source, LanguageVersion.CSharp8);
     }
 
     [TestMethod]
@@ -1006,9 +1045,10 @@ public class Test_SourceGeneratorsDiagnostics
     }
 
     [TestMethod]
-    public void InvalidContainingTypeForObservablePropertyFieldError()
+    public async Task InvalidContainingTypeForObservableProperty_OnField_Warns()
     {
         string source = """
+            using System.ComponentModel;
             using CommunityToolkit.Mvvm.ComponentModel;
 
             namespace MyApp
@@ -1016,14 +1056,74 @@ public class Test_SourceGeneratorsDiagnostics
                 public partial class MyViewModel : INotifyPropertyChanged
                 {
                     [ObservableProperty]
-                    public int number;
+                    public int {|MVVMTK0019:number|};
 
                     public event PropertyChangedEventHandler PropertyChanged;
                 }
             }
             """;
 
-        VerifyGeneratedDiagnostics<ObservablePropertyGenerator>(source, "MVVMTK0019");
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<InvalidTargetObservablePropertyAttributeAnalyzer>(source, LanguageVersion.CSharp8);
+    }
+
+    [TestMethod]
+    public async Task InvalidContainingTypeForObservableProperty_OnField_InValidType_DoesNotWarn()
+    {
+        string source = """
+            using CommunityToolkit.Mvvm.ComponentModel;
+
+            namespace MyApp
+            {
+                public partial class MyViewModel : ObservableObject
+                {
+                    [ObservableProperty]
+                    public int number;
+                }
+            }
+            """;
+
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<InvalidTargetObservablePropertyAttributeAnalyzer>(source, LanguageVersion.CSharp8);
+    }
+
+    [TestMethod]
+    public async Task InvalidContainingTypeForObservableProperty_OnPartialProperty_Warns()
+    {
+        string source = """
+            using System.ComponentModel;
+            using CommunityToolkit.Mvvm.ComponentModel;
+
+            namespace MyApp
+            {
+                public partial class MyViewModel : INotifyPropertyChanged
+                {
+                    [ObservableProperty]
+                    public int {|MVVMTK0019:Number|} { get; set; }
+
+                    public event PropertyChangedEventHandler PropertyChanged;
+                }
+            }
+            """;
+
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<InvalidTargetObservablePropertyAttributeAnalyzer>(source, LanguageVersion.CSharp8);
+    }
+
+    [TestMethod]
+    public async Task InvalidContainingTypeForObservableProperty_OnPartialProperty_InValidType_DoesNotWarn()
+    {
+        string source = """
+            using CommunityToolkit.Mvvm.ComponentModel;
+            
+            namespace MyApp
+            {
+                public partial class MyViewModel : ObservableObject
+                {
+                    [ObservableProperty]
+                    public int Number { get; set; }
+                }
+            }
+            """;
+
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<InvalidTargetObservablePropertyAttributeAnalyzer>(source, LanguageVersion.CSharp8);
     }
 
     [TestMethod]
@@ -1206,7 +1306,7 @@ public class Test_SourceGeneratorsDiagnostics
     }
 
     [TestMethod]
-    public void InvalidObservablePropertyError_Object()
+    public async Task InvalidObservablePropertyError_Object()
     {
         string source = """
             using CommunityToolkit.Mvvm.ComponentModel;
@@ -1216,16 +1316,35 @@ public class Test_SourceGeneratorsDiagnostics
                 public partial class MyViewModel : ObservableObject
                 {
                     [ObservableProperty]
-                    public object property;
+                    public object {|MVVMTK0024:property|};
                 }
             }
             """;
 
-        VerifyGeneratedDiagnostics<ObservablePropertyGenerator>(source, "MVVMTK0024");
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<InvalidGeneratedPropertyObservablePropertyAttributeAnalyzer>(source, LanguageVersion.CSharp9);
     }
 
     [TestMethod]
-    public void InvalidObservablePropertyError_PropertyChangingEventArgs()
+    public async Task InvalidObservablePropertyError_Object_WithProperty()
+    {
+        string source = """
+            using CommunityToolkit.Mvvm.ComponentModel;
+
+            namespace MyApp
+            {
+                public partial class MyViewModel : ObservableObject
+                {
+                    [ObservableProperty]
+                    public object {|MVVMTK0024:Property|} { get; set; }
+                }
+            }
+            """;
+
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<InvalidGeneratedPropertyObservablePropertyAttributeAnalyzer>(source, LanguageVersion.Preview);
+    }
+
+    [TestMethod]
+    public async Task InvalidObservablePropertyError_PropertyChangingEventArgs()
     {
         string source = """
             using System.ComponentModel;
@@ -1236,16 +1355,16 @@ public class Test_SourceGeneratorsDiagnostics
                 public partial class MyViewModel : ObservableObject
                 {
                     [ObservableProperty]
-                    public PropertyChangingEventArgs property;
+                    public PropertyChangingEventArgs {|MVVMTK0024:property|};
                 }
             }
             """;
 
-        VerifyGeneratedDiagnostics<ObservablePropertyGenerator>(source, "MVVMTK0024");
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<InvalidGeneratedPropertyObservablePropertyAttributeAnalyzer>(source, LanguageVersion.CSharp9);
     }
 
     [TestMethod]
-    public void InvalidObservablePropertyError_PropertyChangedEventArgs()
+    public async Task InvalidObservablePropertyError_PropertyChangedEventArgs()
     {
         string source = """
             using System.ComponentModel;
@@ -1256,16 +1375,16 @@ public class Test_SourceGeneratorsDiagnostics
                 public partial class MyViewModel : ObservableObject
                 {
                     [ObservableProperty]
-                    public PropertyChangedEventArgs property;
+                    public PropertyChangedEventArgs {|MVVMTK0024:property|};
                 }
             }
             """;
 
-        VerifyGeneratedDiagnostics<ObservablePropertyGenerator>(source, "MVVMTK0024");
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<InvalidGeneratedPropertyObservablePropertyAttributeAnalyzer>(source, LanguageVersion.CSharp9);
     }
 
     [TestMethod]
-    public void InvalidObservablePropertyError_CustomTypeDerivedFromPropertyChangedEventArgs()
+    public async Task InvalidObservablePropertyError_CustomTypeDerivedFromPropertyChangedEventArgs()
     {
         string source = """
             using System.ComponentModel;
@@ -1284,12 +1403,12 @@ public class Test_SourceGeneratorsDiagnostics
                 public partial class MyViewModel : ObservableObject
                 {
                     [ObservableProperty]
-                    public MyPropertyChangedEventArgs property;
+                    public MyPropertyChangedEventArgs {|MVVMTK0024:property|};
                 }
             }
             """;
 
-        VerifyGeneratedDiagnostics<ObservablePropertyGenerator>(source, "MVVMTK0024");
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<InvalidGeneratedPropertyObservablePropertyAttributeAnalyzer>(source, LanguageVersion.CSharp9);
     }
 
     [TestMethod]
@@ -1880,13 +1999,429 @@ public class Test_SourceGeneratorsDiagnostics
         await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<AutoPropertyWithFieldTargetedObservablePropertyAttributeAnalyzer>(source, LanguageVersion.CSharp9);
     }
 
+    [TestMethod]
+    public async Task WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer_NotTargetingWindows_DoesNotWarn()
+    {
+        const string source = """
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+            
+            namespace MyApp
+            {
+                public partial class SampleViewModel : ObservableObject
+                {            
+                    [RelayCommand]
+                    private void DoStuff()
+                    {
+                    }
+                }
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp10,
+            editorconfig: []);
+    }
+
+    [TestMethod]
+    public async Task WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer_TargetingWindows_DoesNotWarn()
+    {
+        const string source = """
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+            
+            namespace MyApp
+            {
+                public partial class SampleViewModel : ObservableObject
+                {            
+                    [RelayCommand]
+                    private void DoStuff()
+                    {
+                    }
+                }
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp10,
+            editorconfig: [("_MvvmToolkitIsUsingWindowsRuntimePack", true)]);
+    }
+
+    [TestMethod]
+    public async Task WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer_TargetingWindows_NotIncluded1_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+            using WinRT;
+            
+            namespace MyApp
+            {
+                [GeneratedBindableCustomProperty([], [])]
+                public partial class SampleViewModel : ObservableObject
+                {            
+                    [RelayCommand]
+                    private void DoStuff()
+                    {
+                    }
+                }
+            }
+
+            namespace WinRT
+            {
+                public class GeneratedBindableCustomPropertyAttribute(string[] a, string[] b) : Attribute
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp12,
+            editorconfig: [("_MvvmToolkitIsUsingWindowsRuntimePack", true)]);
+    }
+
+    [TestMethod]
+    public async Task WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer_TargetingWindows_NotIncluded2_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+            using WinRT;
+            
+            namespace MyApp
+            {
+                [GeneratedBindableCustomProperty(["OtherCommand"], [])]
+                public partial class SampleViewModel : ObservableObject
+                {            
+                    [RelayCommand]
+                    private void DoStuff()
+                    {
+                    }
+                }
+            }
+
+            namespace WinRT
+            {
+                public class GeneratedBindableCustomPropertyAttribute(string[] a, string[] b) : Attribute
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp12,
+            editorconfig: [("_MvvmToolkitIsUsingWindowsRuntimePack", true)]);
+    }
+
+    [TestMethod]
+    public async Task WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer_TargetingWindows_NotIncluded3_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+            using WinRT;
+            
+            namespace MyApp
+            {
+                [GeneratedBindableCustomProperty(["OtherCommand"], ["DoStuffCommand"])]
+                public partial class SampleViewModel : ObservableObject
+                {            
+                    [RelayCommand]
+                    private void DoStuff()
+                    {
+                    }
+                }
+            }
+
+            namespace WinRT
+            {
+                public class GeneratedBindableCustomPropertyAttribute(string[] a, string[] b) : Attribute
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp12,
+            editorconfig: [("_MvvmToolkitIsUsingWindowsRuntimePack", true)]);
+    }
+
+    [TestMethod]
+    public async Task WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer_TargetingWindows_Bindable_Warns()
+    {
+        const string source = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+            using WinRT;
+            
+            namespace MyApp
+            {
+                [GeneratedBindableCustomProperty]
+                public partial class SampleViewModel : ObservableObject
+                {            
+                    [RelayCommand]
+                    private void {|MVVMTK0046:DoStuff|}()
+                    {
+                    }
+                }
+            }
+
+            namespace WinRT
+            {
+                public class GeneratedBindableCustomPropertyAttribute : Attribute
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp10,
+            editorconfig: [("_MvvmToolkitIsUsingWindowsRuntimePack", true)]);
+    }
+
+    [TestMethod]
+    public async Task WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer_TargetingWindows_Bindable_Included1_Warns()
+    {
+        const string source = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+            using WinRT;
+            
+            namespace MyApp
+            {
+                [GeneratedBindableCustomProperty(["DoStuffCommand"], [])]
+                public partial class SampleViewModel : ObservableObject
+                {            
+                    [RelayCommand]
+                    private void {|MVVMTK0046:DoStuff|}()
+                    {
+                    }
+                }
+            }
+
+            namespace WinRT
+            {
+                public class GeneratedBindableCustomPropertyAttribute(string[] a, string[] b) : Attribute
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp12,
+            editorconfig: [("_MvvmToolkitIsUsingWindowsRuntimePack", true)]);
+    }
+
+    [TestMethod]
+    public async Task WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer_TargetingWindows_Bindable_Included2_Warns()
+    {
+        const string source = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+            using WinRT;
+            
+            namespace MyApp
+            {
+                [GeneratedBindableCustomProperty(["Blah", "", "DoStuffCommand"], [])]
+                public partial class SampleViewModel : ObservableObject
+                {            
+                    [RelayCommand]
+                    private void {|MVVMTK0046:DoStuff|}()
+                    {
+                    }
+                }
+            }
+
+            namespace WinRT
+            {
+                public class GeneratedBindableCustomPropertyAttribute(string[] a, string[] b) : Attribute
+                {
+                }
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatibleAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp12,
+            editorconfig: [("_MvvmToolkitIsUsingWindowsRuntimePack", true)]);
+    }
+
+    [TestMethod]
+    public async Task WinRTClassUsingNotifyPropertyChangedAttributesAnalyzer_NotTargetingWindows_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            
+            namespace MyApp;
+
+            [ObservableObject]
+            public partial class SampleViewModel : BaseType
+            {
+            }
+
+            public class BaseType
+            {
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTClassUsingNotifyPropertyChangedAttributesAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp10,
+            editorconfig: []);
+    }
+
+    [TestMethod]
+    public async Task WinRTClassUsingNotifyPropertyChangedAttributesAnalyzer_TargetingWindows_NoCsWinRTAotOptimizer_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            
+            namespace MyApp;
+
+            [ObservableObject]
+            public partial class SampleViewModel : BaseType
+            {
+            }
+
+            public class BaseType
+            {
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTClassUsingNotifyPropertyChangedAttributesAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp10,
+            editorconfig: [("_MvvmToolkitIsUsingWindowsRuntimePack", true)]);
+    }
+
+    [TestMethod]
+    public async Task WinRTClassUsingNotifyPropertyChangedAttributesAnalyzer_TargetingWindows_NoBaseType_ObservableObject_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            
+            namespace MyApp;
+
+            [ObservableObject]
+            public partial class SampleViewModel
+            {
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTClassUsingNotifyPropertyChangedAttributesAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp10,
+            editorconfig: [("_MvvmToolkitIsUsingWindowsRuntimePack", true), ("CsWinRTAotOptimizerEnabled", "auto")]);
+    }
+
+    [TestMethod]
+    public async Task WinRTClassUsingNotifyPropertyChangedAttributesAnalyzer_TargetingWindows_NoBaseType_INotifyPropertyChanged_DoesNotWarn()
+    {
+        const string source = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            
+            namespace MyApp;
+
+            [INotifyPropertyChanged]
+            public partial class SampleViewModel
+            {
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTClassUsingNotifyPropertyChangedAttributesAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp10,
+            editorconfig: [("_MvvmToolkitIsUsingWindowsRuntimePack", true), ("CsWinRTAotOptimizerEnabled", "auto")]);
+    }
+
+    [TestMethod]
+    public async Task WinRTClassUsingNotifyPropertyChangedAttributesAnalyzer_TargetingWindows_BaseType_ObservableObject_Warns()
+    {
+        const string source = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            
+            namespace MyApp;
+
+            [ObservableObject]
+            public partial class {|MVVMTK0050:SampleViewModel|} : BaseType
+            {
+            }
+            
+            public class BaseType
+            {
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTClassUsingNotifyPropertyChangedAttributesAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp10,
+            editorconfig: [("_MvvmToolkitIsUsingWindowsRuntimePack", true), ("CsWinRTAotOptimizerEnabled", "auto")]);
+    }
+
+    [TestMethod]
+    public async Task WinRTClassUsingNotifyPropertyChangedAttributesAnalyzer_TargetingWindows_BaseType_INotifyPropertyChanged_Warns()
+    {
+        const string source = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            
+            namespace MyApp;
+
+            [INotifyPropertyChanged]
+            public partial class {|MVVMTK0049:SampleViewModel|} : BaseType
+            {
+            }
+            
+            public class BaseType
+            {
+            }
+            """;
+
+        await CSharpAnalyzerWithLanguageVersionTest<WinRTClassUsingNotifyPropertyChangedAttributesAnalyzer>.VerifyAnalyzerAsync(
+            source,
+            LanguageVersion.CSharp10,
+            editorconfig: [("_MvvmToolkitIsUsingWindowsRuntimePack", true), ("CsWinRTAotOptimizerEnabled", "auto")]);
+    }
+
     /// <summary>
     /// Verifies the diagnostic errors for a given analyzer, and that all available source generators can run successfully with the input source (including subsequent compilation).
     /// </summary>
     /// <typeparam name="TAnalyzer">The type of the analyzer to test.</typeparam>
     /// <param name="markdownSource">The input source to process with diagnostic annotations.</param>
     /// <param name="languageVersion">The language version to use to parse code and run tests.</param>
-    private static async Task VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<TAnalyzer>(string markdownSource, LanguageVersion languageVersion)
+    internal static async Task VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<TAnalyzer>(string markdownSource, LanguageVersion languageVersion)
+        where TAnalyzer : DiagnosticAnalyzer, new()
+    {
+        await VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<TAnalyzer>(markdownSource, languageVersion, [], []);
+    }
+
+    /// <summary>
+    /// Verifies the diagnostic errors for a given analyzer, and that all available source generators can run successfully with the input source (including subsequent compilation).
+    /// </summary>
+    /// <typeparam name="TAnalyzer">The type of the analyzer to test.</typeparam>
+    /// <param name="markdownSource">The input source to process with diagnostic annotations.</param>
+    /// <param name="languageVersion">The language version to use to parse code and run tests.</param>
+    /// <param name="generatorDiagnosticsIds">The diagnostic ids to expect for the input source code.</param>
+    /// <param name="ignoredDiagnosticIds">The list of diagnostic ids to ignore in the final compilation.</param>
+    internal static async Task VerifyAnalyzerDiagnosticsAndSuccessfulGeneration<TAnalyzer>(string markdownSource, LanguageVersion languageVersion, string[] generatorDiagnosticsIds, string[] ignoredDiagnosticIds)
         where TAnalyzer : DiagnosticAnalyzer, new()
     {
         await CSharpAnalyzerWithLanguageVersionTest<TAnalyzer>.VerifyAnalyzerAsync(markdownSource, languageVersion);
@@ -1903,9 +2438,9 @@ public class Test_SourceGeneratorsDiagnostics
         };
 
         // Transform diagnostic annotations back to normal C# (eg. "{|MVVMTK0008:Foo()|}" ---> "Foo()")
-        string source = Regex.Replace(markdownSource, @"{\|((?:,?\w+)+):(.+)\|}", m => m.Groups[2].Value);
+        string source = Regex.Replace(markdownSource, @"{\|((?:,?\w+)+):(.+?)\|}", m => m.Groups[2].Value);
 
-        VerifyGeneratedDiagnostics(CSharpSyntaxTree.ParseText(source, CSharpParseOptions.Default.WithLanguageVersion(languageVersion)), generators, Array.Empty<string>());
+        VerifyGeneratedDiagnostics(CSharpSyntaxTree.ParseText(source, CSharpParseOptions.Default.WithLanguageVersion(languageVersion)), generators, generatorDiagnosticsIds, ignoredDiagnosticIds);
     }
 
     /// <summary>
@@ -1914,12 +2449,12 @@ public class Test_SourceGeneratorsDiagnostics
     /// <typeparam name="TGenerator">The generator type to use.</typeparam>
     /// <param name="source">The input source to process.</param>
     /// <param name="diagnosticsIds">The diagnostic ids to expect for the input source code.</param>
-    private static void VerifyGeneratedDiagnostics<TGenerator>(string source, params string[] diagnosticsIds)
+    internal static void VerifyGeneratedDiagnostics<TGenerator>(string source, params string[] diagnosticsIds)
         where TGenerator : class, IIncrementalGenerator, new()
     {
         IIncrementalGenerator generator = new TGenerator();
 
-        VerifyGeneratedDiagnostics(CSharpSyntaxTree.ParseText(source, CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8)), new[] { generator }, diagnosticsIds);
+        VerifyGeneratedDiagnostics(CSharpSyntaxTree.ParseText(source, CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp8)), new[] { generator }, diagnosticsIds, []);
     }
 
     /// <summary>
@@ -1928,7 +2463,8 @@ public class Test_SourceGeneratorsDiagnostics
     /// <param name="syntaxTree">The input source tree to process.</param>
     /// <param name="generators">The generators to apply to the input syntax tree.</param>
     /// <param name="generatorDiagnosticsIds">The diagnostic ids to expect for the input source code.</param>
-    private static void VerifyGeneratedDiagnostics(SyntaxTree syntaxTree, IIncrementalGenerator[] generators, string[] generatorDiagnosticsIds)
+    /// <param name="ignoredDiagnosticIds">The list of diagnostic ids to ignore in the final compilation.</param>
+    internal static void VerifyGeneratedDiagnostics(SyntaxTree syntaxTree, IIncrementalGenerator[] generators, string[] generatorDiagnosticsIds, string[] ignoredDiagnosticIds)
     {
         // Ensure CommunityToolkit.Mvvm and System.ComponentModel.DataAnnotations are loaded
         Type observableObjectType = typeof(ObservableObject);
@@ -1944,7 +2480,7 @@ public class Test_SourceGeneratorsDiagnostics
         // Create a syntax tree with the input source
         CSharpCompilation compilation = CSharpCompilation.Create(
             "original",
-            new SyntaxTree[] { syntaxTree },
+            [syntaxTree],
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
@@ -1963,7 +2499,10 @@ public class Test_SourceGeneratorsDiagnostics
             // Compute diagnostics for the final compiled output (just include errors)
             List<Diagnostic> outputCompilationDiagnostics = outputCompilation.GetDiagnostics().Where(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error).ToList();
 
-            Assert.IsTrue(outputCompilationDiagnostics.Count == 0, $"resultingIds: {string.Join(", ", outputCompilationDiagnostics)}");
+            // Filtered diagnostics
+            List<Diagnostic> filteredDiagnostics = outputCompilationDiagnostics.Where(diagnostic => !ignoredDiagnosticIds.Contains(diagnostic.Id)).ToList();
+
+            Assert.IsTrue(filteredDiagnostics.Count == 0, $"resultingIds: {string.Join(", ", filteredDiagnostics)}");
         }
 
         GC.KeepAlive(observableObjectType);

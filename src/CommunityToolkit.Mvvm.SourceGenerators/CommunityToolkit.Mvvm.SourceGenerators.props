@@ -4,6 +4,15 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+    <!--
+      While this project does not produce a .dll that consuming projects execute at runtime, we still want to
+      include debugging information, to make it easier to debug the generator themselves in case of issues.
+      Rather than using portable .pdb files, we just embed them, to ensure debuggers will load them correctly.
+      Using portable .pdb-s results in Visual Studio not automatically loading them when attaching a debugger
+      to the Roslyn code analysis process to try to debug the generators, forcing to pick the path manually.
+    -->
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <!--
@@ -16,20 +25,25 @@
   -->
   <PropertyGroup>
 
-    <!-- Set the assembly name to always be the same, regardless of the Roslyn version being targeted (cut the trailing ".RoslynXYZ" suffix) -->
-    <AssemblyName>$(MSBuildProjectName.Substring(0, $([MSBuild]::Subtract($(MSBuildProjectName.Length), 10))))</AssemblyName>
+    <!-- Set the assembly name to always be the same, regardless of the Roslyn version being targeted (cut the trailing ".RoslynXYZW" suffix) -->
+    <AssemblyName>$(MSBuildProjectName.Substring(0, $([MSBuild]::Subtract($(MSBuildProjectName.Length), 11))))</AssemblyName>
 
     <!--
       Get the Roslyn version to use from the name of the project importing this .props file.
       All projects will use the "<PROJECT_NAME>.Roslyn<MAJOR><MINOR><PATCH>.csproj" naming scheme.
+      Note that "<MINOR>" always uses two digits, not just one.
     -->
-    <MvvmToolkitSourceGeneratorRoslynMajorVersion>$(MSBuildProjectName.Substring($([MSBuild]::Subtract($(MSBuildProjectName.Length), 3)), 1))</MvvmToolkitSourceGeneratorRoslynMajorVersion>
-    <MvvmToolkitSourceGeneratorRoslynMinorVersion>$(MSBuildProjectName.Substring($([MSBuild]::Subtract($(MSBuildProjectName.Length), 2)), 1))</MvvmToolkitSourceGeneratorRoslynMinorVersion>
+    <MvvmToolkitSourceGeneratorRoslynMajorVersion>$(MSBuildProjectName.Substring($([MSBuild]::Subtract($(MSBuildProjectName.Length), 4)), 1))</MvvmToolkitSourceGeneratorRoslynMajorVersion>
+    <MvvmToolkitSourceGeneratorRoslynMinorVersion>$(MSBuildProjectName.Substring($([MSBuild]::Subtract($(MSBuildProjectName.Length), 3)), 2))</MvvmToolkitSourceGeneratorRoslynMinorVersion>
     <MvvmToolkitSourceGeneratorRoslynPatchVersion>$(MSBuildProjectName.Substring($([MSBuild]::Subtract($(MSBuildProjectName.Length), 1)), 1))</MvvmToolkitSourceGeneratorRoslynPatchVersion>
     <MvvmToolkitSourceGeneratorRoslynVersion>$(MvvmToolkitSourceGeneratorRoslynMajorVersion).$(MvvmToolkitSourceGeneratorRoslynMinorVersion).$(MvvmToolkitSourceGeneratorRoslynPatchVersion)</MvvmToolkitSourceGeneratorRoslynVersion>
 
     <!-- Also define "ROSLYN_<MAJOR>_<MINOR>_OR_GREATER" build constants, so the generator code can multi-target whenever needed and add any required polyfills -->
     <DefineConstants Condition="$([MSBuild]::VersionGreaterThanOrEquals($(MvvmToolkitSourceGeneratorRoslynVersion), 4.3.1))">$(DefineConstants);ROSLYN_4_3_1_OR_GREATER</DefineConstants>
+    <DefineConstants Condition="$([MSBuild]::VersionGreaterThanOrEquals($(MvvmToolkitSourceGeneratorRoslynVersion), 4.12.0))">$(DefineConstants);ROSLYN_4_12_0_OR_GREATER</DefineConstants>
+
+    <!-- Disable the removed rules analyzer for older Roslyn versions (as we might not support all diagnostics) -->
+    <NoWarn Condition="$([MSBuild]::VersionLessThan($(MvvmToolkitSourceGeneratorRoslynVersion), 4.12.0))">$(NoWarn);RS2003</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -18,8 +18,8 @@ public class Test_SpanExtensions
     {
         Span<int> data = new[] { 1, 2, 3, 4, 5, 6, 7 };
 
-        ref int r0 = ref Unsafe.AsRef(data.DangerousGetReference());
-        ref int r1 = ref Unsafe.AsRef(data[0]);
+        ref int r0 = ref Unsafe.AsRef(in data.DangerousGetReference());
+        ref int r1 = ref Unsafe.AsRef(in data[0]);
 
         Assert.IsTrue(Unsafe.AreSame(ref r0, ref r1));
     }
@@ -29,8 +29,8 @@ public class Test_SpanExtensions
     {
         Span<int> data = new[] { 1, 2, 3, 4, 5, 6, 7 };
 
-        ref int r0 = ref Unsafe.AsRef(data.DangerousGetReference());
-        ref int r1 = ref Unsafe.AsRef(data.DangerousGetReferenceAt(0));
+        ref int r0 = ref Unsafe.AsRef(in data.DangerousGetReference());
+        ref int r1 = ref Unsafe.AsRef(in data.DangerousGetReferenceAt(0));
 
         Assert.IsTrue(Unsafe.AreSame(ref r0, ref r1));
     }
@@ -40,8 +40,8 @@ public class Test_SpanExtensions
     {
         Span<int> data = new[] { 1, 2, 3, 4, 5, 6, 7 };
 
-        ref int r0 = ref Unsafe.AsRef(data.DangerousGetReferenceAt(5));
-        ref int r1 = ref Unsafe.AsRef(data[5]);
+        ref int r0 = ref Unsafe.AsRef(in data.DangerousGetReferenceAt(5));
+        ref int r1 = ref Unsafe.AsRef(in data[5]);
 
         Assert.IsTrue(Unsafe.AreSame(ref r0, ref r1));
     }
@@ -69,6 +69,7 @@ public class Test_SpanExtensions
         Test<Guid>();
         Test<string>();
         Test<object>();
+        Test<char>();
         Test<IEnumerable<int>>();
     }
 
@@ -90,6 +91,7 @@ public class Test_SpanExtensions
         Test<Guid>();
         Test<string>();
         Test<object>();
+        Test<char>();
         Test<IEnumerable<int>>();
     }
 
@@ -127,6 +129,7 @@ public class Test_SpanExtensions
         Test<Guid>();
         Test<string>();
         Test<object>();
+        Test<char>();
         Test<IEnumerable<int>>();
     }
 

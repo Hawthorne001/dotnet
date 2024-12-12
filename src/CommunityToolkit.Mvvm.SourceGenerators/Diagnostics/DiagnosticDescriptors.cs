@@ -35,6 +35,21 @@ internal static class DiagnosticDescriptors
     public const string AsyncVoidReturningRelayCommandMethodId = "MVVMTK0039";
 
     /// <summary>
+    /// The diagnostic id for <see cref="UseObservablePropertyOnPartialProperty"/>.
+    /// </summary>
+    public const string UseObservablePropertyOnPartialPropertyId = "MVVMTK0042";
+
+    /// <summary>
+    /// The diagnostic id for <see cref="WinRTObservablePropertyOnFieldsIsNotAotCompatible"/>.
+    /// </summary>
+    public const string WinRTObservablePropertyOnFieldsIsNotAotCompatibleId = "MVVMTK0045";
+
+    /// <summary>
+    /// The diagnostic id for <see cref="UseObservablePropertyOnSemiAutoProperty"/>.
+    /// </summary>
+    public const string UseObservablePropertyOnSemiAutoPropertyId = "MVVMTK0056";
+
+    /// <summary>
     /// Gets a <see cref="DiagnosticDescriptor"/> indicating when a duplicate declaration of <see cref="INotifyPropertyChanged"/> would happen.
     /// <para>
     /// Format: <c>"Cannot apply [INotifyPropertyChangedAttribute] to type {0}, as it already declares the INotifyPropertyChanged interface"</c>.
@@ -117,17 +132,17 @@ internal static class DiagnosticDescriptors
     /// <summary>
     /// Gets a <see cref="DiagnosticDescriptor"/> indicating when the target type doesn't inherit from the <c>ObservableValidator</c> class.
     /// <para>
-    /// Format: <c>"The field {0}.{1} cannot be used to generate an observable property, as it has {2} validation attribute(s) but is declared in a type that doesn't inherit from ObservableValidator"</c>.
+    /// Format: <c>"The {0} {1}.{2} cannot be used to generate an observable property, as it has {3} validation attribute(s) but is declared in a type that doesn't inherit from ObservableValidator"</c>.
     /// </para>
     /// </summary>
     public static readonly DiagnosticDescriptor MissingObservableValidatorInheritanceForValidationAttributeError = new DiagnosticDescriptor(
         id: "MVVMTK0006",
         title: "Missing ObservableValidator inheritance",
-        messageFormat: "The field {0}.{1} cannot be used to generate an observable property, as it has {2} validation attribute(s) but is declared in a type that doesn't inherit from ObservableValidator",
+        messageFormat: "The {0} {1}.{2} cannot be used to generate an observable property, as it has {3} validation attribute(s) but is declared in a type that doesn't inherit from ObservableValidator",
         category: typeof(ObservablePropertyGenerator).FullName,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        description: "Cannot apply [ObservableProperty] to fields with validation attributes if they are declared in a type that doesn't inherit from ObservableValidator.",
+        description: "Cannot apply [ObservableProperty] to fields or properties with validation attributes if they are declared in a type that doesn't inherit from ObservableValidator.",
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0006");
 
     /// <summary>
@@ -320,35 +335,35 @@ internal static class DiagnosticDescriptors
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0018");
 
     /// <summary>
-    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[ObservableProperty]</c> is applied to a field in an invalid type.
+    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[ObservableProperty]</c> is applied to a field or property in an invalid type.
     /// <para>
-    /// Format: <c>"The field {0}.{1} cannot be used to generate an observable property, as its containing type doesn't inherit from ObservableObject, nor does it use [ObservableObject] or [INotifyPropertyChanged]"</c>.
+    /// Format: <c>"The {0} {1}.{2} cannot be used to generate an observable property, as its containing type doesn't inherit from ObservableObject, nor does it use [ObservableObject] or [INotifyPropertyChanged]"</c>.
     /// </para>
     /// </summary>
-    public static readonly DiagnosticDescriptor InvalidContainingTypeForObservablePropertyFieldError = new DiagnosticDescriptor(
+    public static readonly DiagnosticDescriptor InvalidContainingTypeForObservablePropertyMemberError = new DiagnosticDescriptor(
         id: "MVVMTK0019",
-        title: "Invalid containing type for [ObservableProperty] field",
-        messageFormat: "The field {0}.{1} cannot be used to generate an observable property, as its containing type doesn't inherit from ObservableObject, nor does it use [ObservableObject] or [INotifyPropertyChanged]",
+        title: "Invalid containing type for [ObservableProperty] field or property",
+        messageFormat: "The {0} {1}.{2} cannot be used to generate an observable property, as its containing type doesn't inherit from ObservableObject, nor does it use [ObservableObject] or [INotifyPropertyChanged]",
         category: typeof(ObservablePropertyGenerator).FullName,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        description: "Fields annotated with [ObservableProperty] must be contained in a type that inherits from ObservableObject or that is annotated with [ObservableObject] or [INotifyPropertyChanged] (including base types).",
+        description: "Fields and properties annotated with [ObservableProperty] must be contained in a type that inherits from ObservableObject or that is annotated with [ObservableObject] or [INotifyPropertyChanged] (including base types).",
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0019");
 
     /// <summary>
-    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[ObservableProperty]</c> is applied to a field in an invalid type.
+    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[ObservableProperty]</c> is applied to a field or property in an invalid type.
     /// <para>
-    /// Format: <c>"The field {0}.{1} needs to be annotated with [ObservableProperty] in order to enable using [NotifyPropertyChangedFor], [NotifyCanExecuteChangedFor], [NotifyPropertyChangedRecipients] and [NotifyDataErrorInfo]"</c>.
+    /// Format: <c>"The {0} {1}.{2} needs to be annotated with [ObservableProperty] in order to enable using [NotifyPropertyChangedFor], [NotifyCanExecuteChangedFor], [NotifyPropertyChangedRecipients] and [NotifyDataErrorInfo]"</c>.
     /// </para>
     /// </summary>
     public static readonly DiagnosticDescriptor FieldWithOrphanedDependentObservablePropertyAttributesError = new DiagnosticDescriptor(
         id: "MVVMTK0020",
         title: "Invalid use of attributes dependent on [ObservableProperty]",
-        messageFormat: "The field {0}.{1} needs to be annotated with [ObservableProperty] in order to enable using [NotifyPropertyChangedFor], [NotifyCanExecuteChangedFor], [NotifyPropertyChangedRecipients] and [NotifyDataErrorInfo]",
+        messageFormat: "The {0} {1}.{2} needs to be annotated with [ObservableProperty] in order to enable using [NotifyPropertyChangedFor], [NotifyCanExecuteChangedFor], [NotifyPropertyChangedRecipients] and [NotifyDataErrorInfo]",
         category: typeof(ObservablePropertyGenerator).FullName,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        description: "Fields not annotated with [ObservableProperty] cannot use [NotifyPropertyChangedFor], [NotifyCanExecuteChangedFor], [NotifyPropertyChangedRecipients] and [NotifyDataErrorInfo].",
+        description: "Fields and properties not annotated with [ObservableProperty] cannot use [NotifyPropertyChangedFor], [NotifyCanExecuteChangedFor], [NotifyPropertyChangedRecipients] and [NotifyDataErrorInfo].",
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0020");
 
     /// <summary>
@@ -368,19 +383,19 @@ internal static class DiagnosticDescriptors
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0021");
 
     /// <summary>
-    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[NotifyPropertyChangedRecipients]</c> is applied to a field in an invalid type.
+    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[NotifyPropertyChangedRecipients]</c> is applied to a field or property in an invalid type.
     /// <para>
-    /// Format: <c>"The field {0}.{1} cannot be annotated with [NotifyPropertyChangedRecipients], as its containing type doesn't inherit from ObservableRecipient, nor does it use [ObservableRecipient]"</c>.
+    /// Format: <c>"The {0} {1}.{2} cannot be annotated with [NotifyPropertyChangedRecipients], as its containing type doesn't inherit from ObservableRecipient, nor does it use [ObservableRecipient]"</c>.
     /// </para>
     /// </summary>
-    public static readonly DiagnosticDescriptor InvalidContainingTypeForNotifyPropertyChangedRecipientsFieldError = new DiagnosticDescriptor(
+    public static readonly DiagnosticDescriptor InvalidContainingTypeForNotifyPropertyChangedRecipientsMemberError = new DiagnosticDescriptor(
         id: "MVVMTK0022",
-        title: "Invalid containing type for [ObservableProperty] field",
-        messageFormat: "The field {0}.{1} cannot be annotated with [NotifyPropertyChangedRecipients], as its containing type doesn't inherit from ObservableRecipient, nor does it use [ObservableRecipient]",
+        title: "Invalid containing type for [ObservableProperty] field or property",
+        messageFormat: "The {0} {1}.{2} cannot be annotated with [NotifyPropertyChangedRecipients], as its containing type doesn't inherit from ObservableRecipient, nor does it use [ObservableRecipient]",
         category: typeof(ObservablePropertyGenerator).FullName,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        description: "Fields annotated with [NotifyPropertyChangedRecipients] must be contained in a type that inherits from ObservableRecipient or that is annotated with [ObservableRecipient] (including base types).",
+        description: "Fields and properties annotated with [NotifyPropertyChangedRecipients] must be contained in a type that inherits from ObservableRecipient or that is annotated with [ObservableRecipient] (including base types).",
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0022");
 
     /// <summary>
@@ -402,49 +417,49 @@ internal static class DiagnosticDescriptors
     /// <summary>
     /// Gets a <see cref="DiagnosticDescriptor"/> indicating when a generated property created with <c>[ObservableProperty]</c> would cause conflicts with other generated members.
     /// <para>
-    /// Format: <c>"The field {0}.{1} cannot be used to generate an observable property, as its name or type would cause conflicts with other generated members"</c>.
+    /// Format: <c>"The {0} {1}.{2} cannot be used to generate an observable property, as its name or type would cause conflicts with other generated members"</c>.
     /// </para>
     /// </summary>
     public static readonly DiagnosticDescriptor InvalidObservablePropertyError = new DiagnosticDescriptor(
         id: "MVVMTK0024",
         title: "Invalid generated property declaration",
-        messageFormat: "The field {0}.{1} cannot be used to generate an observable property, as its name or type would cause conflicts with other generated members",
+        messageFormat: "The {0} {1}.{2} cannot be used to generate an observable property, as its name or type would cause conflicts with other generated members",
         category: typeof(ObservablePropertyGenerator).FullName,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        description: "The fields annotated with [ObservableProperty] cannot result in a property name or have a type that would cause conflicts with other generated members.",
+        description: "The fields and properties annotated with [ObservableProperty] cannot result in a property name or have a type that would cause conflicts with other generated members.",
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0024");
 
     /// <summary>
     /// Gets a <see cref="DiagnosticDescriptor"/> indicating when the target type doesn't inherit from the <c>ObservableValidator</c> class.
     /// <para>
-    /// Format: <c>"The field {0}.{1} cannot be annotated with [NotifyDataErrorInfo], as it is declared in a type that doesn't inherit from ObservableValidator"</c>.
+    /// Format: <c>"The {0} {1}.{2} cannot be annotated with [NotifyDataErrorInfo], as it is declared in a type that doesn't inherit from ObservableValidator"</c>.
     /// </para>
     /// </summary>
     public static readonly DiagnosticDescriptor MissingObservableValidatorInheritanceForNotifyDataErrorInfoError = new DiagnosticDescriptor(
         id: "MVVMTK0025",
         title: "Missing ObservableValidator inheritance",
-        messageFormat: "The field {0}.{1} cannot be annotated with [NotifyDataErrorInfo], as it is declared in a type that doesn't inherit from ObservableValidator",
+        messageFormat: "The {0} {1}.{2} cannot be annotated with [NotifyDataErrorInfo], as it is declared in a type that doesn't inherit from ObservableValidator",
         category: typeof(ObservablePropertyGenerator).FullName,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        description: "Cannot apply [NotifyDataErrorInfo] to fields that are declared in a type that doesn't inherit from ObservableValidator.",
+        description: "Cannot apply [NotifyDataErrorInfo] to fields and properties that are declared in a type that doesn't inherit from ObservableValidator.",
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0025");
 
     /// <summary>
-    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when the target field uses [NotifyDataErrorInfo] but has no validation attributes.
+    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when the target field or property uses [NotifyDataErrorInfo] but has no validation attributes.
     /// <para>
-    /// Format: <c>"The field {0}.{1} cannot be annotated with [NotifyDataErrorInfo], as it doesn't have any validation attributes to use during validation"</c>.
+    /// Format: <c>"The {0} {1}.{2} cannot be annotated with [NotifyDataErrorInfo], as it doesn't have any validation attributes to use during validation"</c>.
     /// </para>
     /// </summary>
     public static readonly DiagnosticDescriptor MissingValidationAttributesForNotifyDataErrorInfoError = new DiagnosticDescriptor(
         id: "MVVMTK0026",
         title: "Missing validation attributes",
-        messageFormat: "The field {0}.{1} cannot be annotated with [NotifyDataErrorInfo], as it doesn't have any validation attributes to use during validation",
+        messageFormat: "The {0} {1}.{2} cannot be annotated with [NotifyDataErrorInfo], as it doesn't have any validation attributes to use during validation",
         category: typeof(ObservablePropertyGenerator).FullName,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        description: "Cannot apply [NotifyDataErrorInfo] to fields that don't have any validation attributes to use during validation.",
+        description: "Cannot apply [NotifyDataErrorInfo] to fields and properties that don't have any validation attributes to use during validation.",
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0026");
 
     /// <summary>
@@ -480,35 +495,35 @@ internal static class DiagnosticDescriptors
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0028");
 
     /// <summary>
-    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[NotifyPropertyChangedRecipients]</c> is applied to a field in a class with <c>[NotifyPropertyChangedRecipients]</c> used at the class-level.
+    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[NotifyPropertyChangedRecipients]</c> is applied to a field or property in a class with <c>[NotifyPropertyChangedRecipients]</c> used at the class-level.
     /// <para>
-    /// Format: <c>"The field {0}.{1} is annotated with [NotifyPropertyChangedRecipients], but that is not needed since its containing type already uses or inherits [NotifyPropertyChangedRecipients] at the class-level"</c>.
+    /// Format: <c>"The {0} {1}.{2} is annotated with [NotifyPropertyChangedRecipients], but that is not needed since its containing type already uses or inherits [NotifyPropertyChangedRecipients] at the class-level"</c>.
     /// </para>
     /// </summary>
-    public static readonly DiagnosticDescriptor UnnecessaryNotifyPropertyChangedRecipientsAttributeOnFieldWarning = new DiagnosticDescriptor(
+    public static readonly DiagnosticDescriptor UnnecessaryNotifyPropertyChangedRecipientsAttributeOnMemberWarning = new DiagnosticDescriptor(
         id: "MVVMTK0029",
-        title: "Unnecessary [NotifyPropertyChangedRecipients] field annotation",
-        messageFormat: "The field {0}.{1} is annotated with [NotifyPropertyChangedRecipients], but that is not needed since its containing type already uses or inherits [NotifyPropertyChangedRecipients] at the class-level",
+        title: "Unnecessary [NotifyPropertyChangedRecipients] field or property annotation",
+        messageFormat: "The {0} {1}.{2} is annotated with [NotifyPropertyChangedRecipients], but that is not needed since its containing type already uses or inherits [NotifyPropertyChangedRecipients] at the class-level",
         category: typeof(ObservablePropertyGenerator).FullName,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "Annotating a field with [NotifyPropertyChangedRecipients] is not necessary if the containing type has or inherits [NotifyPropertyChangedRecipients] at the class-level.",
+        description: "Annotating a field or property with [NotifyPropertyChangedRecipients] is not necessary if the containing type has or inherits [NotifyPropertyChangedRecipients] at the class-level.",
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0029");
 
     /// <summary>
-    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[NotifyDataErrorInfo]</c> is applied to a field in a class with <c>[NotifyDataErrorInfo]</c> used at the class-level.
+    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[NotifyDataErrorInfo]</c> is applied to a field or property in a class with <c>[NotifyDataErrorInfo]</c> used at the class-level.
     /// <para>
-    /// Format: <c>"The field {0}.{1} is annotated with [NotifyDataErrorInfo], but that is not needed since its containing type already uses or inherits [NotifyDataErrorInfo] at the class-level"</c>.
+    /// Format: <c>"The {0} {1}.{2} is annotated with [NotifyDataErrorInfo], but that is not needed since its containing type already uses or inherits [NotifyDataErrorInfo] at the class-level"</c>.
     /// </para>
     /// </summary>
-    public static readonly DiagnosticDescriptor UnnecessaryNotifyDataErrorInfoAttributeOnFieldWarning = new DiagnosticDescriptor(
+    public static readonly DiagnosticDescriptor UnnecessaryNotifyDataErrorInfoAttributeOnMemberWarning = new DiagnosticDescriptor(
         id: "MVVMTK0030",
-        title: "Unnecessary [NotifyDataErrorInfo] field annotation",
-        messageFormat: "The field {0}.{1} is annotated with [NotifyDataErrorInfo], but that is not needed since its containing type already uses or inherits [NotifyDataErrorInfo] at the class-level",
+        title: "Unnecessary [NotifyDataErrorInfo] field or property annotation",
+        messageFormat: "The {0} {1}.{2} is annotated with [NotifyDataErrorInfo], but that is not needed since its containing type already uses or inherits [NotifyDataErrorInfo] at the class-level",
         category: typeof(ObservablePropertyGenerator).FullName,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "Annotating a field with [NotifyDataErrorInfo] is not necessary if the containing type has or inherits [NotifyDataErrorInfo] at the class-level.",
+        description: "Annotating a field or property with [NotifyDataErrorInfo] is not necessary if the containing type has or inherits [NotifyDataErrorInfo] at the class-level.",
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0030");
 
     /// <summary>
@@ -624,8 +639,7 @@ internal static class DiagnosticDescriptors
         category: typeof(ObservablePropertyGenerator).FullName,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        description: "All attributes targeting the generated property for a field annotated with [ObservableProperty] must be using valid expressions.",
-        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0037");
+        description: "All attributes targeting the generated property for a field annotated with [ObservableProperty] must be using valid expressions.");
 
     /// <summary>
     /// Gets a <see cref="DiagnosticDescriptor"/> indicating when a method with <c>[RelayCommand]</c> is using an invalid attribute targeting the field or property.
@@ -640,8 +654,7 @@ internal static class DiagnosticDescriptors
         category: typeof(RelayCommandGenerator).FullName,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        description: "All attributes targeting the generated field or property for a method annotated with [RelayCommand] must be using valid expressions.",
-        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0038");
+        description: "All attributes targeting the generated field or property for a method annotated with [RelayCommand] must be using valid expressions.");
 
     /// <summary>
     /// Gets a <see cref="DiagnosticDescriptor"/> indicating when a method with <c>[RelayCommand]</c> is async void.
@@ -674,4 +687,261 @@ internal static class DiagnosticDescriptors
         isEnabledByDefault: true,
         description: "The backing fields of auto-properties cannot be annotated with [ObservableProperty] (the attribute can only be used directly on fields, and the generator will then handle generating the corresponding property).",
         helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0040");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for the C# language version not being sufficient for <c>[ObservableProperty]</c> on partial properties.
+    /// <para>
+    /// Format: <c>"Using [ObservableProperty] on partial properties requires the C# language version to be set to 'preview', as support for the 'field' keyword is needed by the source generators to emit valid code (add <LangVersion>preview</LangVersion> to your .csproj/.props file)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor CSharpLanguageVersionIsNotPreviewForObservableProperty = new DiagnosticDescriptor(
+        id: "MVVMTK0041",
+        title: "C# language version is not 'preview'",
+        messageFormat: """Using [ObservableProperty] on partial properties requires the C# language version to be set to 'preview', as support for the 'field' keyword is needed by the source generators to emit valid code (add <LangVersion>preview</LangVersion> to your .csproj/.props file)""",
+        category: typeof(ObservablePropertyGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "The C# language version must be set to 'preview' when using [ObservableProperty] on partial properties for the source generators to emit valid code (the <LangVersion>preview</LangVersion> option must be set in the .csproj/.props file).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0041");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when <c>[ObservableProperty]</c> on a field should be converted to a partial property.
+    /// <para>
+    /// Format: <c>"The field {0}.{1} using [ObservableProperty] can be converted to a partial property instead, which is recommended (doing so improves the developer experience and allows other generators and analyzers to correctly see the generated property as well)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor UseObservablePropertyOnPartialProperty = new DiagnosticDescriptor(
+        id: UseObservablePropertyOnPartialPropertyId,
+        title: "Prefer using [ObservableProperty] on partial properties",
+        messageFormat: """The field {0}.{1} using [ObservableProperty] can be converted to a partial property instead, which is recommended (doing so improves the developer experience and allows other generators and analyzers to correctly see the generated property as well)""",
+        category: typeof(ObservablePropertyGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "Fields using [ObservableProperty] can be converted to partial properties instead, which is recommended (doing so improves the developer experience and allows other generators and analyzers to correctly see the generated property as well).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0042");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[ObservableProperty]</c> is applied to a property with an invalid declaration.
+    /// <para>
+    /// Format: <c>"The property {0}.{1} cannot be used to generate an observable property, as its declaration is not valid (it must be an instance (non static) partial property with a getter and a setter that is not init-only)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor InvalidPropertyDeclarationForObservableProperty = new DiagnosticDescriptor(
+        id: "MVVMTK0043",
+        title: "Invalid property declaration for [ObservableProperty]",
+        messageFormat: "The property {0}.{1} cannot be used to generate an observable property, as its declaration is not valid (it must be an instance (non static) partial property with a getter and a setter that is not init-only)",
+        category: typeof(ObservablePropertyGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Properties annotated with [ObservableProperty] must be instance (non static) partial properties with a getter and a setter that is not init-only.",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0043");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[ObservableProperty]</c> is applied to a property when an unsupported version of Roslyn is used.
+    /// <para>
+    /// Format: <c>"The property {0}.{1} cannot be used to generate an observable property, as the current Roslyn version being used is not high enough (remove [ObservableProperty] or target a field instead, or upgrade to at least Visual Studio 2022 version 17.12 and the .NET 9 SDK)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor UnsupportedRoslynVersionForObservablePartialPropertySupport = new DiagnosticDescriptor(
+        id: "MVVMTK0044",
+        title: "Unsupported Roslyn version for using [ObservableProperty] on partial properties",
+        messageFormat: "The property {0}.{1} cannot be used to generate an observable property, as the current Roslyn version being used is not high enough (remove [ObservableProperty] or target a field instead, or upgrade to at least Visual Studio 2022 version 17.12 and the .NET 9 SDK)",
+        category: typeof(ObservablePropertyGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "Using [ObservableProperty] with (partial) properties requires a higher version of Roslyn (remove [ObservableProperty] or target a field instead, or upgrade to at least Visual Studio 2022 version 17.12 and the .NET 9 SDK).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0044");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when <c>[ObservableProperty]</c> is used on a field in WinRT scenarios.
+    /// <para>
+    /// Format: <c>"The field {0}.{1} using [ObservableProperty] will generate code that is not AOT compatible in WinRT scenarios (such as UWP XAML and WinUI 3 apps), and a partial property should be used instead (as it allows the CsWinRT generators to correctly produce the necessary WinRT marshalling code)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor WinRTObservablePropertyOnFieldsIsNotAotCompatible = new DiagnosticDescriptor(
+        id: WinRTObservablePropertyOnFieldsIsNotAotCompatibleId,
+        title: "Using [ObservableProperty] on fields is not AOT compatible for WinRT",
+        messageFormat: """The field {0}.{1} using [ObservableProperty] will generate code that is not AOT compatible in WinRT scenarios (such as UWP XAML and WinUI 3 apps), and a partial property should be used instead (as it allows the CsWinRT generators to correctly produce the necessary WinRT marshalling code)""",
+        category: typeof(ObservablePropertyGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Fields using [ObservableProperty] will generate code that is not AOT compatible in WinRT scenarios (such as UWP XAML and WinUI 3 apps), and partial properties should be used instead (as they allow the CsWinRT generators to correctly produce the necessary WinRT marshalling code).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0045");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when <c>[RelayCommand]</c> is used on a method in types where <c>[GeneratedBindableCustomProperty]</c> is used.
+    /// <para>
+    /// Format: <c>"The method {0} using [RelayCommand] within a type also using [GeneratedBindableCustomProperty] and including the generated property, which is not supported, and a manually declared command property should be used instead (the [GeneratedBindableCustomProperty] generator cannot see the generated command property that is produced by the MVVM Toolkit generator)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor WinRTRelayCommandIsNotGeneratedBindableCustomPropertyCompatible = new DiagnosticDescriptor(
+        id: "MVVMTK0046",
+        title: "Using [RelayCommand] is not compatible with [GeneratedBindableCustomProperty]",
+        messageFormat: """The method {0} using [RelayCommand] within a type also using [GeneratedBindableCustomProperty] and including the generated property, which is not supported, and a manually declared command property should be used instead (the [GeneratedBindableCustomProperty] generator cannot see the generated command property that is produced by the MVVM Toolkit generator)""",
+        category: typeof(RelayCommandGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Using [RelayCommand] on methods within a type also using [GeneratedBindableCustomProperty] and including the generated property is not supported, and a manually declared command property should be used instead (the [GeneratedBindableCustomProperty] generator cannot see the generated command property that is produced by the MVVM Toolkit generator).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0046");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when <c>[GeneratedBindableCustomProperty]</c> is used on a type that also uses <c>[ObservableProperty]</c> on any declared or inherited fields.
+    /// <para>
+    /// Format: <c>"The type {0} using [GeneratedBindableCustomProperty] is also using [ObservableProperty] on its declared (or inherited) field {1}.{2}, and including the generated property: combining the two generators is not supported, and partial properties should be used instead (the [GeneratedBindableCustomProperty] generator cannot see the generated property that is produced by the MVVM Toolkit generator)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor WinRTGeneratedBindableCustomPropertyWithBaseObservablePropertyOnField = new DiagnosticDescriptor(
+        id: "MVVMTK0047",
+        title: "Using [GeneratedBindableCustomProperty] is not compatible with [ObservableProperty] on fields",
+        messageFormat: """The type {0} using [GeneratedBindableCustomProperty] is also using [ObservableProperty] on its declared (or inherited) field {1}.{2}, and including the generated property: combining the two generators is not supported, and partial properties should be used instead (the [GeneratedBindableCustomProperty] generator cannot see the generated property that is produced by the MVVM Toolkit generator)""",
+        category: typeof(ObservablePropertyGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Using [GeneratedBindableCustomProperty] on types that also use [ObservableProperty] on any declared (or inherited) fields and including the generated property is not supported, and partial properties should be used instead (the [GeneratedBindableCustomProperty] generator cannot see the generated property that is produced by the MVVM Toolkit generator).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0047");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when <c>[GeneratedBindableCustomProperty]</c> is used on a type that also uses <c>[RelayCommand]</c> on any declared or inherited methods.
+    /// <para>
+    /// Format: <c>"The type {0} using [GeneratedBindableCustomProperty] is also using [RelayCommand] on its inherited method {1} and including the generated property: combining the two generators is not supported, and a manually declared command property should be used instead (the [GeneratedBindableCustomProperty] generator cannot see the generated property that is produced by the MVVM Toolkit generator)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor WinRTGeneratedBindableCustomPropertyWithBaseRelayCommand = new DiagnosticDescriptor(
+        id: "MVVMTK0048",
+        title: "Using [GeneratedBindableCustomProperty] is not compatible with [RelayCommand]",
+        messageFormat: """The type {0} using [GeneratedBindableCustomProperty] is also using [RelayCommand] on its inherited method {1} and including the generated property: combining the two generators is not supported, and a manually declared command property should be used instead (the [GeneratedBindableCustomProperty] generator cannot see the generated property that is produced by the MVVM Toolkit generator)""",
+        category: typeof(RelayCommandGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Using [GeneratedBindableCustomProperty] on types that also use [RelayCommand] on any inherited methods and including the generated property is not supported, and a manually declared command property should be used instead (the [GeneratedBindableCustomProperty] generator cannot see the generated property that is produced by the MVVM Toolkit generator).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0048");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[INotifyPropertyChanged]</c> is used on a type in WinRT scenarios.
+    /// <para>
+    /// Format: <c>"The type {0} is using the [INotifyPropertyChanged] attribute, with is not AOT compatible in WinRT scenarios (such as UWP XAML and WinUI 3 apps), and it should derive from ObservableObject or manually implement INotifyPropertyChanged instead (as it allows the CsWinRT generators to correctly produce the necessary WinRT marshalling code)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor WinRTUsingINotifyPropertyChangedAttribute = new DiagnosticDescriptor(
+        id: "MVVMTK0049",
+        title: "Using [INotifyPropertyChanged] is not AOT compatible for WinRT",
+        messageFormat: "The type {0} is using the [INotifyPropertyChanged] attribute, with is not AOT compatible in WinRT scenarios (such as UWP XAML and WinUI 3 apps), and it should derive from ObservableObject or manually implement INotifyPropertyChanged instead (as it allows the CsWinRT generators to correctly produce the necessary WinRT marshalling code)",
+        category: typeof(INotifyPropertyChangedGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Using the [INotifyPropertyChanged] attribute on types is not AOT compatible in WinRT scenarios (such as UWP XAML and WinUI 3 apps), and they should derive from ObservableObject or manually implement INotifyPropertyChanged instead (as it allows the CsWinRT generators to correctly produce the necessary WinRT marshalling code).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0049");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> indicating when <c>[ObservableObject]</c> is used on a type in WinRT scenarios.
+    /// <para>
+    /// Format: <c>"The type {0} is using the [ObservableObject] attribute, with is not AOT compatible in WinRT scenarios (such as UWP XAML and WinUI 3 apps), and it should derive from ObservableObject instead (as it allows the CsWinRT generators to correctly produce the necessary WinRT marshalling code)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor WinRTUsingObservableObjectAttribute = new DiagnosticDescriptor(
+        id: "MVVMTK0050",
+        title: "Using [ObservableObject] is not AOT compatible for WinRT",
+        messageFormat: "The type {0} is using the [ObservableObject] attribute, with is not AOT compatible in WinRT scenarios (such as UWP XAML and WinUI 3 apps), and it should derive from ObservableObject instead (as it allows the CsWinRT generators to correctly produce the necessary WinRT marshalling code)",
+        category: typeof(ObservableObjectGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        description: "Using the [ObservableObject] attribute on types is not AOT compatible in WinRT scenarios (such as UWP XAML and WinUI 3 apps), and they should derive from ObservableObject instead (as it allows the CsWinRT generators to correctly produce the necessary WinRT marshalling code).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0050");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when <c>[ObservableProperty]</c> is used on a field in WinRT scenarios.
+    /// <para>
+    /// Format: <c>"This project produced one or more 'MVVMTK0045' warnings due to [ObservableProperty] being used on fields, which is not AOT compatible in WinRT scenarios, but it can't enable partial properties and the associated code fixer because 'LangVersion' is not set to 'preview' (setting 'LangVersion=preview' is required to use [ObservableProperty] on partial properties and address these warnings)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor WinRTObservablePropertyOnFieldsIsNotAotCompatibleCompilationEndInfo = new DiagnosticDescriptor(
+        id: "MVVMTK0051",
+        title: "Using [ObservableProperty] with WinRT and AOT requires 'LangVersion=preview'",
+        messageFormat: """This project produced one or more 'MVVMTK0045' warnings due to [ObservableProperty] being used on fields, which is not AOT compatible in WinRT scenarios, but it can't enable partial properties and the associated code fixer because 'LangVersion' is not set to 'preview' (setting 'LangVersion=preview' is required to use [ObservableProperty] on partial properties and address these warnings)""",
+        category: typeof(ObservablePropertyGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "This project producing one or more 'MVVMTK0045' warnings due to [ObservableProperty] being used on fields, which is not AOT compatible in WinRT scenarios, should set 'LangVersion' to 'preview' to enable partial properties and the associated code fixer (setting 'LangVersion=preview' is required to use [ObservableProperty] on partial properties and address these warnings).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0051",
+        customTags: WellKnownDiagnosticTags.CompilationEnd);
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when <c>[ObservableProperty]</c> is used on a property that is not an incomplete partial definition.
+    /// <para>
+    /// Format: <c>"The property {0}.{1} is not an incomplete partial definition ([ObservableProperty] must be used on partial property definitions with no implementation part)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor InvalidObservablePropertyDeclarationIsNotIncompletePartialDefinition = new DiagnosticDescriptor(
+        id: "MVVMTK0052",
+        title: "Using [ObservableProperty] on an invalid property declaration (not incomplete partial definition)",
+        messageFormat: """The property {0}.{1} is not an incomplete partial definition ([ObservableProperty] must be used on partial property definitions with no implementation part)""",
+        category: typeof(ObservablePropertyGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "A property using [ObservableProperty] is not an incomplete partial definition part ([ObservableProperty] must be used on partial property definitions with no implementation part).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0052");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when <c>[ObservableProperty]</c> is used on a property that returns a ref value.
+    /// <para>
+    /// Format: <c>"The property {0}.{1} returns a ref value ([ObservableProperty] must be used on properties returning a type by value)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor InvalidObservablePropertyDeclarationReturnsByRef = new DiagnosticDescriptor(
+        id: "MVVMTK0053",
+        title: "Using [ObservableProperty] on a property that returns byref",
+        messageFormat: """The property {0}.{1} returns a ref value ([ObservableProperty] must be used on properties returning a type by value)""",
+        category: typeof(ObservablePropertyGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "A property using [ObservableProperty] returns a value by reference ([ObservableProperty] must be used on properties returning a type by value).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0053");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when <c>[ObservableProperty]</c> is used on a property that returns a byref-like value.
+    /// <para>
+    /// Format: <c>"The property {0}.{1} returns a byref-like value ([ObservableProperty] must be used on properties of a non byref-like type)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor InvalidObservablePropertyDeclarationReturnsRefLikeType = new DiagnosticDescriptor(
+        id: "MVVMTK0054",
+        title: "Using [ObservableProperty] on a property that returns byref-like",
+        messageFormat: """The property {0}.{1} returns a byref-like value ([ObservableProperty] must be used on properties of a non byref-like type)""",
+        category: typeof(ObservablePropertyGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "A property using [ObservableProperty] returns a byref-like value ([ObservableProperty] must be used on properties of a non byref-like type).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0054");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when <c>[ObservableProperty]</c> is used on a property that returns a pointer type.
+    /// <para>
+    /// Format: <c>"The property {0}.{1} returns a pointer or function pointer value ([ObservableProperty] must be used on properties of a non pointer-like type)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor InvalidObservablePropertyDeclarationReturnsPointerLikeType = new DiagnosticDescriptor(
+        id: "MVVMTK0055",
+        title: "Using [ObservableProperty] on a property that returns pointer-like",
+        messageFormat: """The property {0}.{1} returns a pointer or function pointer value ([ObservableProperty] must be used on properties of a non pointer-like type)""",
+        category: typeof(ObservablePropertyGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true,
+        description: "A property using [ObservableProperty] returns a pointer-like value ([ObservableProperty] must be used on properties of a non pointer-like type).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0055");
+
+    /// <summary>
+    /// Gets a <see cref="DiagnosticDescriptor"/> for when a semi-auto property can be converted to use <c>[ObservableProperty]</c> instead.
+    /// <para>
+    /// Format: <c>"The semi-auto property {0}.{1} can be converted to a partial property using [ObservableProperty], which is recommended (doing so makes the code less verbose and results in more optimized code)"</c>.
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor UseObservablePropertyOnSemiAutoProperty = new DiagnosticDescriptor(
+        id: UseObservablePropertyOnSemiAutoPropertyId,
+        title: "Prefer using [ObservableProperty] over semi-auto properties",
+        messageFormat: """The semi-auto property {0}.{1} can be converted to a partial property using [ObservableProperty], which is recommended (doing so makes the code less verbose and results in more optimized code)""",
+        category: typeof(ObservablePropertyGenerator).FullName,
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        description: "Semi-auto properties should be converted to partial properties using [ObservableProperty] when possible, which is recommended (doing so makes the code less verbose and results in more optimized code).",
+        helpLinkUri: "https://aka.ms/mvvmtoolkit/errors/mvvmtk0056");
 }

@@ -9,7 +9,6 @@ using CommunityToolkit.Mvvm.SourceGenerators.Extensions;
 using CommunityToolkit.Mvvm.SourceGenerators.Helpers;
 using CommunityToolkit.Mvvm.SourceGenerators.Models;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CommunityToolkit.Mvvm.SourceGenerators;
@@ -25,26 +24,40 @@ public sealed partial class ObservablePropertyGenerator : IIncrementalGenerator
     {
         // Gather info for all annotated fields
         IncrementalValuesProvider<(HierarchyInfo Hierarchy, Result<PropertyInfo?> Info)> propertyInfoWithErrors =
-            context.SyntaxProvider
-            .ForAttributeWithMetadataName(
+            context.ForAttributeWithMetadataNameAndOptions(
                 "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
-                static (node, _) => node is VariableDeclaratorSyntax { Parent: VariableDeclarationSyntax { Parent: FieldDeclarationSyntax { Parent: ClassDeclarationSyntax or RecordDeclarationSyntax, AttributeLists.Count: > 0 } } },
+                Execute.IsCandidatePropertyDeclaration,
                 static (context, token) =>
                 {
-                    if (!context.SemanticModel.Compilation.HasLanguageVersionAtLeastEqualTo(LanguageVersion.CSharp8))
+                    MemberDeclarationSyntax memberSyntax = Execute.GetCandidateMemberDeclaration(context.TargetNode);
+
+                    // Validate that the candidate is valid for the current compilation
+                    if (!Execute.IsCandidateValidForCompilation(memberSyntax, context.SemanticModel))
                     {
                         return default;
                     }
 
-                    FieldDeclarationSyntax fieldDeclaration = (FieldDeclarationSyntax)context.TargetNode.Parent!.Parent!;
-                    IFieldSymbol fieldSymbol = (IFieldSymbol)context.TargetSymbol;
-
-                    // Get the hierarchy info for the target symbol, and try to gather the property info
-                    HierarchyInfo hierarchy = HierarchyInfo.From(fieldSymbol.ContainingType);
+                    // Validate the symbol as well before doing any work
+                    if (!Execute.IsCandidateSymbolValid(context.TargetSymbol))
+                    {
+                        return default;
+                    }
 
                     token.ThrowIfCancellationRequested();
 
-                    _ = Execute.TryGetInfo(fieldDeclaration, fieldSymbol, context.SemanticModel, token, out PropertyInfo? propertyInfo, out ImmutableArray<DiagnosticInfo> diagnostics);
+                    // Get the hierarchy info for the target symbol, and try to gather the property info
+                    HierarchyInfo hierarchy = HierarchyInfo.From(context.TargetSymbol.ContainingType);
+
+                    token.ThrowIfCancellationRequested();
+
+                    _ = Execute.TryGetInfo(
+                        memberSyntax,
+                        context.TargetSymbol,
+                        context.SemanticModel,
+                        context.GlobalOptions,
+                        token,
+                        out PropertyInfo? propertyInfo,
+                        out ImmutableArray<DiagnosticInfo> diagnostics);
 
                     token.ThrowIfCancellationRequested();
 
